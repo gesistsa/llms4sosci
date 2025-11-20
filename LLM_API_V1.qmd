@@ -82,9 +82,39 @@ headers_anthropic <- add_headers(
 
 ## First request: a minimal test call
 
-After you have set your API key and base configuration, send a tiny request to verify everything works.
+In this first test call, we use the **minimal required settings** to talk to an LLM via the API. For your own use cases, you will mainly want to adjust three things:
 
-<!-- @Arthur: versuche hier die Kernelemente zu erklären. Also vor allem die Parts, die Nutzende später für ihren eigenen Case anpassen wollen: Modelauswahl (gg.f mit Link zur Modellübersicht), Was stellt man bei max_tokens und was bei Temperature ein und beschreibe, was der Output ist -->
+- **`model`**: This selects which model you want to use.  
+  - In the OpenAI example: `model = "gpt-3.5-turbo"`  
+  - In the Anthropic example: `model = "claude-3-5-sonnet-20240620"`  
+  Depending on your use case (costs, speed, context length, performance), you can choose a different model here. You can find a list of available models in each provider’s documentation.
+
+- **`max_tokens`**: Defines how many **tokens** the model may use at most for its response.  
+  - Small values (e.g. `max_tokens = 50`) keep answers short and help to control costs.  
+  - Larger values allow longer, more detailed responses but consume more quota.  
+  In this minimal example, a small value is sufficient because we only expect a very short reply.
+
+- **`temperature`** (in the OpenAI example): Controls how **creative or random** the model’s output is.  
+  - `temperature = 0` → very deterministic, almost the same answer every time for the same input.  
+  - Higher values (e.g. `0.7` or `1.0`) → more diverse, creative responses.  
+  For a stable test call, we use a relatively low value (`0.2`) to get reproducible, rather neutral outputs.
+
+We also define a very simple message (**prompt**) in both examples, e.g.:
+
+    messages = list(
+      list(role = "user", content = "Hello! Please reply with a single short sentence.")
+    )
+
+This is the text we send to the model. For your own use case, you replace this string with your own question, your system prompt, or a description of your data/task.
+
+**What is the output?**
+
+Both APIs return a **structured JSON response**, from which we extract the actual model text:
+
+- For OpenAI, we access `out$choices[[1]]$message$content` and print this string with `cat()`.  
+- For Anthropic, we access `raw$content[[1]]$text` and also print it with `cat()`.
+
+If you run the code and do not see any error, you should see a **short, model-generated sentence** in the output panel (e.g. a simple English sentence). This means: your API key works, the basic configuration is correct – and you can now adjust `model`, `max_tokens`, `temperature`, and the prompt to fit your own needs.
 
 
 ### OpenAI (chat completions)
@@ -217,6 +247,25 @@ out <- content(res, as = "parsed", type = "application/json")
 cat(out$choices[[1]]$message$content)
 ```
 
+## Persona / system description
+Persona / system description
+
+In addition to the user message, you can also add a *system message* that defines the model’s persona or role, for example:
+
+```r
+messages = list(
+  list(role = "system", content = "You are a helpful assistant."),
+  list(role = "user",   content = "Hello! Please reply with a single short sentence.")
+)
+
+The system message tells the model how it should behave:
+
+What role it should take (e.g. "You are a statistics tutor...", "You are a legal expert...").
+Which style it should use (e.g. "Explain in simple language", "Answer in German").
+Which constraints to follow (e.g. "Be concise and only output valid JSON.").
+
+In practice, you will often vary this persona description for different projects, while keeping the basic request structure (model, max_tokens, temperature) the same.
+
 ## Trade-offs
 
 - **Accuracy vs. Cost**: More complex prompting or longer examples may increase token usage.
@@ -328,7 +377,7 @@ Cost control strategies:
 
 ## Latency: Efficiency Strategies
 
-<!-- @Arthur:  Insert a short describtion: what is latency? -->
+In this context, latency is the time it takes from sending a request to the API until you start receiving a response from the model. It includes network delays, the time the model needs to process your prompt, and any overhead from your own code or infrastructure.
 
 Factors affecting latency:
 
@@ -405,4 +454,5 @@ Then call from R via httr to http://localhost:11434.
 - Log prompts, responses, and model versions for reproducibility.
 - Use caching for repeated prompts.
 - Monitor costs and storage; rotate logs with sensitive data.
+
 
