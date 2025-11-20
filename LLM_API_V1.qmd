@@ -5,23 +5,16 @@ date: "`r Sys.Date()`"
 format: html
 ---
 
-```{r echo=FALSE}
-options(repos = c(CRAN = "https://cloud.r-project.org/"))
-```
-<!-- @Arthur: this can be removed, if you include dependency management via runtime.txt - then the snapshot and the mirrir are already defined-->
-
-
 # 1. Introduction: Why LLMs Matter in Social Science
 
-Large Language Models (LLMs) represent a paradigm shift in computational social science. Traditional supervised learning approaches often require large, manually annotated datasets, which are costly and time-consuming. LLMs, accessed via APIs, allow researchers to perform complex text analysis tasks with minimal labeled data. This enables faster experimentation, democratizes access to cutting-edge NLP tools, and allows analysis of novel or specialized datasets. 
-<!-- @Arthur: kannst du das vom Einstieg breiter aufziehen? so ist es sehr stark auf Textanalyse begezogen -->
-
+Large Language Models (LLMs) represent a paradigm shift in computational social science. Beyond classical text analysis, they can be used to support survey research (e.g. generating synthetic respondents, pretesting items, coding open-ended answers), extract and structure information from documents and media (e.g. news, parliamentary debates, social media), and assist in data cleaning, harmonization, and recoding. Accessing LLMs via APIs lets us embed these capabilities directly into reproducible workflows in R, instead of relying on manual web interfaces.
 
 **Use Case: Stance Detection**  
 To illustrate, consider stance detection: identifying whether a social media post supports, opposes, or is neutral toward a policy. LLMs can perform this with minimal examples, which is particularly useful for rapidly evolving datasets.
-
-<!-- @Arthur: Kannst du noch ein/zwei Use Cases ergänzen, um eine etwas breitere Anwendbarkeit aufzuzeigen -->
-
+**Use Case: Coding Open-Ended Survey Responses**  
+LLMs can classify or summarize free-text answers from surveys (e.g. “Other: please specify”) into categories such as policy topics, emotions, or problem priorities. This reduces manual coding effort while still allowing you to keep original text for quality checks.
+**Use Case: Entity Normalization in Administrative / Register Data**  
+When working with organization names, occupations, or locations, LLMs can help normalize messy strings (e.g. different spellings of the same organization) into standardized labels. This is especially useful when merging multiple data sources or building panel structures across time.
 
 # 2. Getting Started: Setup and Authentication
 
@@ -60,14 +53,6 @@ api_key <- Sys.getenv("OPENAI_API_KEY")
 
 ## Setting Up the Coding Environment
 
-Install required libraries:
-
-```{r eval=FALSE}
-install.packages("httr")   # for API requests
-install.packages("jsonlite") # for handling JSON
-```
-<!-- @Arthur: install.pacjages in ein separates File - install.R + Version über runtime.txt (siehe ein Repo von David als Beispiel) -->
-
 Example initialization for OpenAI:
 
 ```{r eval=FALSE}
@@ -103,7 +88,7 @@ After you have set your API key and base configuration, send a tiny request to v
 
 
 ### OpenAI (chat completions)
-```{r eval=FALSE}
+```{r eval=FALSE}  
 
 base_url <- "https://api.openai.com/v1/chat/completions"
 headers <- add_headers(
@@ -420,3 +405,4 @@ Then call from R via httr to http://localhost:11434.
 - Log prompts, responses, and model versions for reproducibility.
 - Use caching for repeated prompts.
 - Monitor costs and storage; rotate logs with sensitive data.
+
