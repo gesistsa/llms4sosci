@@ -41,7 +41,8 @@ Never hard-code your API key in scripts. Instead, store it as an environment var
 # Windows (PowerShell)
 system('setx OPENAI_API_KEY "your_openai_key_here"')
 ```
-<!-- @Arthur: Achtung, ohne Neustart von R ist der Key nicht verfügbar. Das muss hier als Hinweis rein. Meines Wissens nach kann man das nicht über Code lösen -->
+
+Remember to restart R after setting your key in order for R to be able to find the key.
 <!-- @Arnim: Was ist gute Praxis, um solche Keys zu hinterlegen? Ich hätte es in Renvironment und mit gitignore gearbeitet, aber das macht den Transfer zu Python schwierig oder? Aber wie ist das mit VMs bzw. interaktiven Environments?-->
 
 
@@ -168,8 +169,6 @@ cat(raw$content[[1]]$text)
 
 Prompting transforms an LLM into a task-specific analytical tool. There are several different prompting strategies, that each have their own strengths and weaknesses. 
 <!-- @Arthur:  Insert link to Prompting Guide here -->
-<!-- @Arthur:  Sag bitte noch was zum Thema Personadescription. Im OpenAI Beispiel steht sonst einfach nur drin: "You are a helpful assistant" - aber das kann man und das wird ja auch variiert -->
-
 
 ## Zero-Shot Prompting
 
@@ -454,5 +453,6 @@ Then call from R via httr to http://localhost:11434.
 - Log prompts, responses, and model versions for reproducibility.
 - Use caching for repeated prompts.
 - Monitor costs and storage; rotate logs with sensitive data.
+
 
 
