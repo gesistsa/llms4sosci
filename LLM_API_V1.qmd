@@ -281,36 +281,6 @@ LLMs often return verbose, unstructured text. For automated research pipelines, 
 
 We can define a JSON schema to force consistent, machine-readable output:
 
-<!-- @Arthur:  im folgenden Codechunk hat bei mir der Json Expert bzw Transfer nicht funktioniert, deshalb darunter ein angepasster Chunk, der das cleaning und parsing ins Json step by step übernimmt. Prüfe bitte, ob der bei der replizierbar und funktionsfähig ist -->
-
-```{r eval=FALSE}
-
-base_url <- "https://api.openai.com/v1/chat/completions"
-headers <- add_headers(
-  Authorization = paste("Bearer", api_key),
-  `Content-Type` = "application/json"
-)
-
-prompt <- "
-Classify the tweet into 'Pro', 'Anti', or 'Neutral'.
-Return a JSON object with double quotes, like:
-{
-  \"stance\": \"Pro\"
-}
-Tweet: 'We need stronger climate action now.'
-"
-
-body <- toJSON(list(
-  model = "gpt-4o-mini",
-  messages = list(list(role = "user", content = prompt)),
-  temperature = 0.0
-))
-
-response <- POST(base_url, headers, body = body)
-result <- content(response, "parsed")
-stance <- fromJSON(result$choices[[1]]$message$content)$stance
-```
-
 ```{r}
 library(httr)
 library(jsonlite)
@@ -453,6 +423,7 @@ Then call from R via httr to http://localhost:11434.
 - Log prompts, responses, and model versions for reproducibility.
 - Use caching for repeated prompts.
 - Monitor costs and storage; rotate logs with sensitive data.
+
 
 
 
