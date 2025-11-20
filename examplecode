@@ -1,0 +1,100 @@
+## Example: Classifying a small text dataset
+
+So far, we have only sent a single paragraph to the API. In most real projects, however, you will want to classify or transform many texts at once (for example survey answers, tweets, or news leads).
+
+Below, we use the small play dataset data/play_data_climate.csv (100 short sentences about climate policy) and classify each text into three stance categories: Pro, Neutral, or Contra.
+
+### 1. Load the example dataset
+
+We first load the CSV file and inspect the first rows.
+
+```{r eval=FALSE}
+library(readr)
+library(dplyr)
+
+#read the play dataset from the repository
+play_data <- read_csv("data/play_data_climate.csv")
+
+#inspect the first rows
+play_data %>%
+slice_head(n = 5)
+```
+
+### 2. Define a prompt template for stance classification
+
+Next, we define a helper function that builds a prompt for each text.
+The model is instructed to return only a JSON object with a single field label.
+
+```{r eval=FALSE}
+build_prompt <- function(text) {
+paste(
+"You are a classifier for stance towards climate policy.",
+"Classes: Pro, Neutral, Contra.",
+"Return ONLY a valid JSON object with the field 'label'.",
+"",
+"Text:", text,
+sep = "\n"
+)
+}
+```
+
+### 3. Send classification requests to the OpenAI API
+
+We now create a helper function that:
+
+- Builds the prompt for a given text.
+- Sends the request to the OpenAI chat completions endpoint.
+- Parses the raw JSON response into an R list (still not “nice” yet).
+
+This code assumes that you have already set:
+api_key
+base_url <- "https://api.openai.com/v1/chat/completions"
+headers (including the Authorization and Content-Type headers)
+
+```{r eval=FALSE}
+library(httr)
+library(jsonlite)
+
+classify_text <- function(text, api_key) {
+prompt <- build_prompt(text)
+
+body <- list(
+model = "gpt-3.5-turbo",
+messages = list(
+list(role = "user", content = prompt)
+),
+max_tokens = 50,
+temperature = 0
+)
+
+res <- httr::POST(
+url = base_url,
+body = jsonlite::toJSON(body, auto_unbox = TRUE),
+encode = "raw",
+headers
+)
+
+httr::stop_for_status(res)
+jsonlite::fromJSON(
+httr::content(res, as = "text", encoding = "UTF-8")
+)
+}
+```
+
+### 4. Classify a small subset of the data
+
+In a real project, you might loop over thousands of texts.
+For this tutorial, we only classify the first few rows to keep runtime and costs low.
+
+```{r eval=FALSE}
+sample_data <- play_data %>%
+slice_head(n = 5)
+
+#run the classification for each text in the sample
+results_raw <- lapply(sample_data$text, classify_text, api_key = api_key)
+
+#look at the first raw response
+results_raw[[1]]
+```
+
+In the next step, you can show how to turn these raw JSON responses into a clean data frame (for example by extracting the label field for each text and joining it back to sample_data).
