@@ -373,7 +373,7 @@ Mitigation:
 - Provide detailed and accurate context
 
 
-# Using a VM or GPU for LLM workflows in R
+# 6. Using a VM or GPU for LLM workflows in R
 <!-- @Arnim:  Kannst du insbesondere hier nachfolgend kommentieren: weitere/andere Ideen, wie man das hier aufziehen kann? Wie kann man KISSKI & BLABLADOR, and OpenRouter Backends hier unterbringen? -->
 
 Many API-based workflows run fully in the cloud provider, so you do not need a local GPU. However, VMs can help with:
@@ -423,6 +423,7 @@ Then call from R via httr to http://localhost:11434.
 - Log prompts, responses, and model versions for reproducibility.
 - Use caching for repeated prompts.
 - Monitor costs and storage; rotate logs with sensitive data.
+
 
 
 
