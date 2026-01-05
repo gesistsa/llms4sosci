@@ -2,7 +2,11 @@
 title: "Using Large Language Models (LLMs) in Social Science Research via API-Access"
 author: "Arthur Mühl"
 date: "`r Sys.Date()`"
-format: html
+format:
+  html:
+    embed-resources: true
+  gfm: default
+  ipynb: default
 ---
 
 # 1. Introduction: Why LLMs Matter in Social Science
@@ -16,6 +20,25 @@ LLMs can classify or summarize free-text answers from surveys (e.g. “Other: pl
 **Use Case: Entity Normalization in Administrative / Register Data**  
 When working with organization names, occupations, or locations, LLMs can help normalize messy strings (e.g. different spellings of the same organization) into standardized labels. This is especially useful when merging multiple data sources or building panel structures across time.
 
+
+## Overview of available LLM models
+
+The table below gives a **high-level overview** of popular LLM families and some key properties (open weights/data, typical usage types, and context length).
+
+| Model            | Creator     | Open parameters | Open data | Available types        | Parameter count     | Context length |
+|------------------|-------------|-----------------|-----------|------------------------|---------------------|----------------|
+| Gemini 2.5 Pro   | Google      | ✗               | ✗         | chat, reasoning        | undisclosed         | 1M             |
+| o3               | OpenAI      | ✗               | ✗         | chat, reasoning        | undisclosed         | 128k           |
+| Claude-4 Opus    | Anthropic   | ✗               | ✗         | chat, reasoning        | undisclosed         | 200k           |
+| DeepSeek v3      | DeepSeek    | ✓               | ✗         | base, chat, reasoning  | 671B                | 128k           |
+| Qwen 3           | Alibaba     | ✓               | ✗         | base, chat, reasoning  | 0.6B to 30B         | 128k           |
+| LLaMA-4          | Meta        | ✓               | ✗         | base, chat             | 8B, 70B, 405B       | 1M             |
+| Magistral-Small  | Mistral AI  | ✓               | ✗         | base, chat             | 24B                 | 128k           |
+| OLMo-2           | AllenAI     | ✓               | ✓         | base, chat             | 1B, 7B, 32B         | 2k             |
+| Pythia           | EleutherAI  | ✓               | ✓         | base                   | 70M to 12B          | 2k             |
+
+Source for the list of LLMs: https://www.gesis.org/fileadmin/admin/Dateikatalog/pdf/guides/16_Holtdirk_Overview_of_LLMs_V1.1.pdf
+
 # 2. Getting Started: Setup and Authentication
 
 ## Obtain and Secure API Keys
@@ -27,8 +50,6 @@ Accessing LLM APIs requires creating an account with a provider and generating a
 - **Cohere**: Register at cohere.ai, go to API dashboard, and copy your key.
 
 Generating the key and using it accordingly might not function before switching to a paid-plan or adding funds to your account, depending on the provider. You should see the pricing overview of the specific provider before continuing.
-
-<!-- @Arthur: please, check for more LLMs to add  https://www.gesis.org/fileadmin/admin/Dateikatalog/pdf/guides/16_Holtdirk_Overview_of_LLMs_V1.1.pdf -->
 
 ### Best Practices for Credential Management
 
@@ -46,7 +67,7 @@ Remember to restart R after setting your key in order for R to be able to find t
 <!-- @Arnim: Was ist gute Praxis, um solche Keys zu hinterlegen? Ich hätte es in Renvironment und mit gitignore gearbeitet, aber das macht den Transfer zu Python schwierig oder? Aber wie ist das mit VMs bzw. interaktiven Environments?-->
 
 
-Retrieving the key in R:
+Retrieving the key in R after restarting:
 
 ```{r eval=FALSE}
 api_key <- Sys.getenv("OPENAI_API_KEY")
@@ -336,6 +357,14 @@ LLM APIs charge per token (approx. a word or subword). For instance:
 | Anthropic      | Claude 3 Haiku | 0.25                      | 1.25                      |
 | Google         | Gemini 1.5 Pro | 1.25-2.50                 | 5.00-10.00                |
 | Cohere         | Command-R+     | 3.00                      | 15.00                     |
+| Anthropic      | Claude-4 Opus   | See Anthropic pricing      | See Anthropic pricing      |
+| DeepSeek       | DeepSeek v3     | Varies (API / self-host)   | Varies (API / self-host)   |
+| Alibaba        | Qwen 3          | Self-hosted (compute cost) | Self-hosted (compute cost) |
+| Meta           | LLaMA-4         | Self-hosted (compute cost) | Self-hosted (compute cost) |
+| Mistral AI     | Magistral-Small | See Mistral pricing        | See Mistral pricing        |
+| AllenAI        | OLMo-2          | Self-hosted (compute cost) | Self-hosted (compute cost) |
+| EleutherAI     | Pythia          | Self-hosted (compute cost) | Self-hosted (compute cost) |
+
 
 Cost control strategies:
 
@@ -372,8 +401,7 @@ Mitigation:
 - Output filtering
 - Provide detailed and accurate context
 
-
-# 6. Using a VM or GPU for LLM workflows in R
+# 6.) Using a VM or GPU for LLM workflows in R
 <!-- @Arnim:  Kannst du insbesondere hier nachfolgend kommentieren: weitere/andere Ideen, wie man das hier aufziehen kann? Wie kann man KISSKI & BLABLADOR, and OpenRouter Backends hier unterbringen? -->
 
 Many API-based workflows run fully in the cloud provider, so you do not need a local GPU. However, VMs can help with:
@@ -423,8 +451,6 @@ Then call from R via httr to http://localhost:11434.
 - Log prompts, responses, and model versions for reproducibility.
 - Use caching for repeated prompts.
 - Monitor costs and storage; rotate logs with sensitive data.
-
-
 
 
 
