@@ -1,0 +1,560 @@
+---
+title: "Using Large Language Models (LLMs) in Social Science Research via API-Access"
+author: "Arthur Mühl"
+date: "`r Sys.Date()`"
+format:
+  html:
+    embed-resources: true
+  gfm: default
+  ipynb: default
+---
+
+# 1. Introduction: Why LLMs Matter in Social Science
+
+Large Language Models (LLMs) represent a paradigm shift in computational social science. Beyond classical text analysis, they can be used to support survey research (e.g. generating synthetic respondents, pretesting items, coding open-ended answers), extract and structure information from documents and media (e.g. news, parliamentary debates, social media), and assist in data cleaning, harmonization, and recoding. Accessing LLMs via APIs lets us embed these capabilities directly into reproducible workflows in R, instead of relying on manual web interfaces.
+
+**Use Case: Stance Detection**  
+To illustrate, consider stance detection: identifying whether a social media post supports, opposes, or is neutral toward a policy. LLMs can perform this with minimal examples, which is particularly useful for rapidly evolving datasets.
+
+**Use Case: Coding Open-Ended Survey Responses**  
+LLMs can classify or summarize free-text answers from surveys (e.g. “Other: please specify”) into categories such as policy topics, emotions, or problem priorities. This reduces manual coding effort while still allowing you to keep original text for quality checks.
+
+**Use Case: Entity Normalization in Administrative / Register Data**  
+When working with organization names, occupations, or locations, LLMs can help normalize messy strings (e.g. different spellings of the same organization) into standardized labels. This is especially useful when merging multiple data sources or building panel structures across time.
+
+
+## Overview of available LLM models
+
+The table below gives a of popular LLM families used in the social sciences and some key properties (open weights/data, typical usage types, and context length).
+
+| Model            | Creator     | Open parameters | Open data | Available types        | Parameter count     | Context length |
+|------------------|-------------|-----------------|-----------|------------------------|---------------------|----------------|
+| Gemini 2.5 Pro   | Google      | ✗               | ✗         | chat, reasoning        | undisclosed         | 1M             |
+| o3               | OpenAI      | ✗               | ✗         | chat, reasoning        | undisclosed         | 128k           |
+| Claude-4 Opus    | Anthropic   | ✗               | ✗         | chat, reasoning        | undisclosed         | 200k           |
+| DeepSeek v3      | DeepSeek    | ✓               | ✗         | base, chat, reasoning  | 671B                | 128k           |
+| Qwen 3           | Alibaba     | ✓               | ✗         | base, chat, reasoning  | 0.6B to 30B         | 128k           |
+| LLaMA-4          | Meta        | ✓               | ✗         | base, chat             | 8B, 70B, 405B       | 1M             |
+| Magistral-Small  | Mistral AI  | ✓               | ✗         | base, chat             | 24B                 | 128k           |
+| OLMo-2           | AllenAI     | ✓               | ✓         | base, chat             | 1B, 7B, 32B         | 2k             |
+| Pythia           | EleutherAI  | ✓               | ✓         | base                   | 70M to 12B          | 2k             |
+
+Source: [https://www.gesis.org/fileadmin/admin/Dateikatalog/pdf/guides/16_Holtdirk_Overview_of_LLMs_V1.1.pdf](https://www.gesis.org/fileadmin/admin/Dateikatalog/pdf/guides/16_Holtdirk_Overview_of_LLMs_V1.1.pdf)
+
+# 2. Getting Started: Setup and Authentication
+
+## Obtain and Secure API Keys
+
+Accessing LLM APIs requires creating an account with a provider and generating a secret API key.
+
+- **OpenAI**: Create an account at openai.com, navigate to API keys, and generate a new key.
+- **Anthropic**: Sign up at anthropic.com, go to “API Keys,” and generate a secret key.
+- **Cohere**: Register at cohere.ai, go to API dashboard, and copy your key.
+
+Generating the key and using it accordingly might not function before switching to a paid-plan or adding funds to your account, depending on the provider. You should see the pricing overview of the specific provider before continuing. While the following can be done with most LLMs, we will stick to OpenAI´s GPT for this tutorial.
+
+### Best Practices for Credential Management
+
+Never hard-code your API key in scripts like we do here. Instead, store it as an environment variable. This process differs depending on your operating system. Most providers provide information for best-practices. [Here](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety) can you find how to do it for the OpenAI API key.
+
+```{r, eval=FALSE}
+# Windows
+system('setx OPENAI_API_KEY "your_openai_key_here"')
+```
+
+Remember to restart R after setting your key in order for R to be able to find the key.
+<!-- @Arnim: Was ist gute Praxis, um solche Keys zu hinterlegen? Ich hätte es in Renvironment und mit gitignore gearbeitet, aber das macht den Transfer zu Python schwierig oder? Aber wie ist das mit VMs bzw. interaktiven Environments?-->
+
+Retrieving the key in R after restarting:
+```{r}
+api_key <- Sys.getenv("OPENAI_API_KEY")
+
+# Checking if api_key has been successfully loaded
+has_api_key <- exists("api_key", inherits = TRUE) &&
+  !is.na(api_key) &&
+  nzchar(api_key)
+```
+
+## Setting Up the Coding Environment
+
+In this section, we prepare the R environment for making authenticated requests to the OpenAI API. We first load the required packages for handling HTTP requests (`httr`) and JSON data (`jsonlite`). We then define the base URL for the OpenAI **Responses API**, which is used to send prompts and receive model outputs.
+
+Authentication is handled via the API key stored in the object `api_key`. This key is passed to the API through the HTTP `Authorization` header using a Bearer token, alongside the required `Content-Type` specification. Once these components are defined, they can be reused across all subsequent API calls, ensuring a consistent and reproducible setup for interacting with OpenAI models.
+
+```{r, eval=has_api_key}
+library(httr)
+library(jsonlite)
+
+base_url <- "https://api.openai.com/v1/responses"
+
+headers <- add_headers(
+Authorization = paste("Bearer", api_key),
+"Content-Type" = "application/json"
+)
+
+```
+
+## First request: a minimal test call
+
+In this first test call, we use the **minimal required settings** to talk to an LLM via the API. For your own use cases, you will mainly want to adjust three things:
+
+- **`model`**: This selects which **model** you want to use.  
+  - OpenAI (Responses API): `model = "gpt-4.1-mini"`  
+  Depending on your use case (costs, speed, context length, performance), you can choose a different model here. You can find a list of available models in each provider’s documentation.
+
+- **`Token limit`**: Defines how many **tokens** the model may use at most for its response.  
+  - OpenAI (Responses API): `max_output_tokens`  
+  Small values (e.g. `50`) keep answers short and help to control costs. Larger values allow longer, more detailed responses but consume more quota. In this minimal example, a small value is sufficient because we only expect a very short reply.
+
+- **`temperature`** (OpenAI Responses API): Controls how **creative or random** the model’s output is.  
+  - `temperature = 0` → very deterministic, almost the same answer every time for the same input.  
+  - Higher values (e.g. `0.7` or `1.0`) → more diverse, creative responses.  
+  For a stable test call, we use a relatively low value (`0.2`) to get reproducible, rather neutral outputs.
+
+We also define a very simple message (**prompt**) in both examples, e.g.:
+
+    messages = list(
+      list(role = "user", content = "Hello! Please reply with a single short sentence.")
+    )
+
+This is the text we send to the model. For your own use case, you replace this string with your own question, your system prompt, or a description of your data/task. *(In some APIs you may also see this represented as a `messages = ...` list — conceptually it serves the same purpose: providing the user’s instruction/content.)*
+
+**What is the output?**
+
+The OpenAI API returns a **structured JSON response**, from which we extract the actual model response text, which is typically located at `out$output[[1]]$content[[1]]$text`.  
+
+If you run the code and do not see any error, you should see a **short, model-generated sentence** in the output panel (e.g. a simple English sentence). This means: your API key works, the basic configuration is correct – and you can now adjust `model`, the token limit, `temperature`, and the prompt to fit your own needs.
+
+### OpenAI (Responses API)
+```{r, eval=has_api_key}
+
+#Defining temperature and tokens limit
+max_tokens  <- 50
+temperature <- 0.2
+
+body <- list(
+  model = "gpt-4.1-mini",
+  input = "Hello! Please reply with one short sentence.",
+  max_output_tokens = max_tokens,
+  temperature = temperature
+)
+
+res <- POST(
+  url = base_url,
+  headers,
+  body = toJSON(body, auto_unbox = TRUE),
+  encode = "raw"
+)
+
+stop_for_status(res)
+
+# Read the response body from `res`
+txt <- content(res, as = "text", encoding = "UTF-8")
+parsed <- fromJSON(txt, simplifyVector = FALSE)
+
+hello <- parsed$output[[1]]$content[[1]]$text
+hello
+```
+
+
+# 3. Prompting Strategies: From Basics to Advanced
+
+Prompting transforms an LLM into a task-specific analytical tool. There are several different prompting strategies, that each have their own strengths and weaknesses. 
+<!-- @Arthur:  Insert link to Prompting Guide here -->
+
+## Zero-Shot Prompting
+
+Provide instructions without examples:
+
+```{r}
+prompt <- "Classify the stance of this tweet about climate policy: 'We need stronger climate action now.'"
+```
+
+Use when you lack labeled examples. Fast but may be less accurate.
+
+## Few-Shot Prompting
+
+Include labeled examples to guide the model:
+
+```{r}
+prompt <- "
+Tweet: 'I support climate regulations.'
+Stance: Pro
+
+Tweet: 'Climate policies hurt the economy.'
+Stance: Anti
+
+Tweet: 'Renewable energy is the future.'
+Stance: Pro
+
+Tweet: 'We need stronger climate action now.'
+Stance:"
+```
+
+Improves accuracy by providing context.
+
+## Chain-of-Thought Prompting
+
+Chain-of-thought (CoT) prompting guides the model to reason explicitly in steps before producing the final answer. This is useful for multi-hop reasoning, coding tasks, data transformations, and methodological explanations.
+
+### How to structure CoT prompts
+- Set the goal and constraints clearly.
+- Ask the model to think step by step.
+- Specify how to move from step to step (state, check, decide, proceed).
+- Instruct the model to output a final concise answer after the steps.
+- When needed, request a machine-readable final summary (e.g., JSON) after the reasoning.
+
+For more in-depth information about prompting strategies, see the [gesis prompting guide](https://quarto.org)
+
+## Example for Zero-Shot-Prompting
+
+Zero-shot prompts do not include task-specific examples; you describe the task clearly and let the model infer the pattern.
+
+```{r, eval=has_api_key}
+
+zero_shot_prompt <- paste(
+  "You are a helpful assistant.",
+  "Task: Summarize the following paragraph in one sentence, focusing on the key takeaway.",
+  "Paragraph: Open-source vector databases have matured rapidly, offering better recall, faster indexing, and lower operational cost.",
+  "Keep it under 25 words.",
+  sep = "\n"
+)
+
+body <- list(
+  model = "gpt-4.1-mini",
+  input = zero_shot_prompt,
+  max_output_tokens = 80,
+  temperature = 0.3
+)
+
+res <- POST(
+  url = base_url,
+  headers,
+  body = toJSON(body, auto_unbox = TRUE),
+  encode = "raw"
+)
+
+stop_for_status(res)
+
+txt <- content(res, as = "text", encoding = "UTF-8")
+parsed <- fromJSON(txt, simplifyVector = FALSE)
+
+# Typical Responses API text path:
+answer <- parsed$output[[1]]$content[[1]]$text
+cat(answer)
+```
+
+## Persona / system description
+
+In addition to the user message, you can also add a *system message* that defines the model’s persona or role, for example:
+
+```r
+messages = list(
+  list(role = "system", content = "You are a helpful assistant."),
+  list(role = "user",   content = "Hello! Please reply with a single short sentence.")
+)
+```
+
+The system message tells the model how it should behave:
+
+- What role it should take (e.g. "You are a statistics tutor...", "You are a legal expert...").
+- Which style it should use (e.g. "Explain in simple language", "Answer in German").
+- Which constraints to follow (e.g. "Be concise and only output valid JSON.").
+
+In practice, you will often vary this persona description for different projects, while keeping the basic request structure (model, max_tokens, temperature) the same.
+
+### Trade-offs
+
+- **Accuracy vs. Cost**: More complex prompting or longer examples may increase token usage.
+- **Stability**: Zero-shot can be unstable; few-shot usually produces more consistent results.
+
+<!-- @Arthur:  Generell wäre es noch schön, hier ein Beispiel zu haben, wo nicht nur ein Paragraph eingelesen wird, sondern eine Beispieldatei mit mehrere Paragraphen eingelesen und klassifiziert wird. Du kannst ja einen kleinen Play-Datensatz mit 100 Beispielsätzen als csv. anlegen und den dann hier einlesen. Den Playdatensatz legst du auch in dem Repo ab. Das kann dann schön im nächsten Paragraph fortgeführt werden: wie bekomme ich aus den Outputs im json-Format zu einem schonen Dataframe? -->
+
+# Hands on example: Classifying multiple texts from a file
+
+So far, we have only sent a single request at a time via the API. In practice, researchers usually work with *collections* of texts stored in files (e.g., CSVs).
+
+In this example, we use a small play dataset (`play_data_climate.csv`) containing multiple short texts.
+We will:
+
+1. Load the dataset & check if an api_key has been set
+2. Classify each sentence using the LLM  
+3. Store the raw model outputs  
+4. Structure the output in Section #4
+
+```{r, message = FALSE}
+library(readr)
+library(dplyr)
+
+# Defining file path
+play_path <- "play_data_climate.csv"
+
+# Loading dataframe
+play_df <- read_csv(play_path, show_col_types = FALSE)
+
+# Creating a subset with 10 Examples
+play_df_small <- dplyr::slice_head(play_df, n = 10)
+glimpse(play_df_small)
+```
+
+**API key check:**
+```{r, echo=FALSE}
+if (!has_api_key) {
+  message(
+    "No OPENAI_API_KEY found. API-dependent chunks are skipped during rendering and wont show (real) output.", " Set an OPENAI_API_KEY to run them interactively."
+  )
+}
+```
+
+Next, we define a small helper function that wraps the API call.
+The function takes a single text as input and returns the raw model output as a string.
+
+Importantly, at this stage we do **not** enforce any structured output format.
+This keeps the example close to the earlier single-paragraph classification and allows us
+to demonstrate the limitations of unstructured outputs later on.
+
+```{r, eval=has_api_key}
+classify_text <- function(text, max_output_tokens = 20, temperature = 0.2) {
+
+  prompt <- paste(
+    "Classify the stance of the following text toward climate change.",
+    "Return a short label only (e.g., supportive, skeptical, neutral, unrelated).",
+    "",
+    "Text:",
+    text,
+    sep = "\n"
+  )
+
+  body <- list(
+    model = "gpt-4.1-mini",
+    input = prompt,
+    max_output_tokens = max_output_tokens,
+    temperature = temperature
+  )
+
+  res <- POST(
+    url = base_url,
+    headers,
+    body = toJSON(body, auto_unbox = TRUE),
+    encode = "raw"
+  )
+  stop_for_status(res)
+
+  txt <- content(res, as = "text", encoding = "UTF-8")
+  parsed <- fromJSON(txt, simplifyVector = FALSE)
+
+  # Responses API text:
+  out_text <- parsed$output[[1]]$content[[1]]$text
+  trimws(out_text)
+}
+```
+
+We could now apply this function to all rows in the dataset.
+Using `purrr::map_chr()`, the LLM is called once per text, and the raw outputs are stored in a new column of the dataframe.
+
+This pattern — keeping the original text and appending model outputs as additional columns — is common in applied text analysis workflows and makes subsequent validation and analysis easier.
+
+```{r, eval=has_api_key, message = FALSE}
+library(dplyr)
+library(purrr)
+
+play_df_classified <- play_df_small %>%
+  mutate(
+    llm_output = map_chr(
+      text,
+      ~ possibly(classify_text, otherwise = NA_character_)(.x)
+    )
+  )
+
+play_df_classified %>%
+  select(id, text, llm_output) %>%
+  head()
+```
+
+At this stage, the model outputs are still unstructured strings.
+This is often sufficient for quick exploration, but it becomes limiting once we want
+to validate outputs, enforce consistency, or analyze results at scale.
+In the next section, we show how to explicitly structure model outputs (e.g., using JSON)
+and convert them into clean, analysis-ready dataframes.
+
+# 4. Structuring Outputs for Research
+
+In the hands-on example above, model outputs were stored as plain strings.
+While this is sufficient for quick inspection, it becomes problematic for automated
+analysis pipelines: formats may vary, labels may drift, and parsing becomes fragile.
+A common solution is to explicitly request structured outputs from the model,
+for example in the form of small JSON objects with fixed keys.
+This allows us to reliably convert model outputs into analysis-ready dataframe columns.
+
+### 4.1 Requesting structured JSON output
+
+We start by modifying the prompt so that the model returns **only** a JSON object
+with a predefined structure. In this example, we enforce a minimal schema with
+a single key, `stance`.
+
+```{r, eval=has_api_key, message = FALSE}
+classify_text_json <- function(text) {
+  prompt <- paste(
+    "Return ONLY JSON: {\"stance\":\"Pro\"|\"Anti\"|\"Neutral\"}",
+    "Text:", text,
+    sep = "\n"
+  )
+
+  body <- list(
+    model = "gpt-4.1-mini",
+    input = prompt,
+    temperature = 0,
+    max_output_tokens = 20
+  )
+
+  res <- POST(url = base_url, headers,
+              body = toJSON(body, auto_unbox = TRUE),
+              encode = "raw")
+  stop_for_status(res)
+
+parsed <- fromJSON(content(res, "text", encoding = "UTF-8"), simplifyVector = FALSE)
+raw <- parsed$output[[1]]$content[[1]]$text
+raw <- gsub("```json|```", "", raw)
+fromJSON(trimws(raw))
+
+}
+```
+
+### 4.2 Converting JSON outputs into a dataframe
+
+We now apply the structured classifier to the same dataset as before.
+Each model response is parsed into a list and then expanded into
+separate dataframe columns.
+
+```{r, eval=has_api_key, message = FALSE}
+library(tidyr)
+
+play_df_structured <- play_df_small %>%
+  mutate(llm_json = map(text, classify_text_json)) %>%
+  unnest_wider(llm_json)
+
+play_df_structured %>%
+  select(id, text, stance) %>%
+  head()
+```
+
+The result is a clean dataframe where model outputs are stored in explicit columns.
+This representation is well suited for quantitative analysis, aggregation,
+visualization, and validation (e.g., checking allowed labels or missing values).
+This ensures outputs integrate seamlessly into analysis workflows, allowing automated aggregation,
+visualization, and statistical modeling. For a more advanced approach to enforcing structured outputs,
+see the discussion of function calling: https://www.promptingguide.ai/applications/function_calling
+
+
+# 5. Practical Challenges in Large-Scale Research
+
+## Costs: Token-Based Pricing and Scalability
+
+LLM APIs charge per token (approx. a word or subword). For instance:
+
+| Provider     | Model            | Input Cost (\$ per 1M tokens) | Output Cost (\$ per 1M tokens) |
+|-------------|------------------|------------------------------|-------------------------------|
+| Alibaba     | Qwen 3           | Self-hosted (compute cost)   | Self-hosted (compute cost)    |
+| AllenAI    | OLMo-2           | Self-hosted (compute cost)   | Self-hosted (compute cost)    |
+| Anthropic  | Claude 3 Haiku   | 0.25                         | 1.25                          |
+| Anthropic  | Claude 3 Opus    | 15.00                        | 75.00                         |
+| Anthropic  | Claude-4 Opus    | See Anthropic pricing        | See Anthropic pricing         |
+| Cohere     | Command-R+       | 3.00                         | 15.00                         |
+| DeepSeek   | DeepSeek v3      | Varies (API / self-host)     | Varies (API / self-host)      |
+| EleutherAI | Pythia           | Self-hosted (compute cost)   | Self-hosted (compute cost)    |
+| Google     | Gemini 1.5 Pro   | 1.25–2.50                    | 5.00–10.00                    |
+| Meta       | LLaMA-4          | Self-hosted (compute cost)   | Self-hosted (compute cost)    |
+| Mistral AI | Magistral-Small  | See Mistral pricing          | See Mistral pricing           |
+| OpenAI    | GPT-4o           | 5.00                         | 20.00                         |
+| OpenAI    | GPT-4o-mini      | 0.60                         | 2.40                          |
+
+
+
+Cost control strategies:
+
+- Use smaller models for large corpora
+- Reduce prompt length
+- Reuse few-shot templates instead of regenerating
+
+
+## Latency: Efficiency Strategies
+
+In this context, latency is the time it takes from sending a request to the API until you start receiving a response from the model. It includes network delays, the time the model needs to process your prompt, and any overhead from your own code or infrastructure.
+
+Factors affecting latency:
+
+- Model size (larger = slower)
+- Prompt length
+- Network speed
+
+Mitigation:
+
+- Use streaming APIs for incremental output <!-- @Arthur:  this needs more explanation -->
+- Optimize prompt length
+- Use low-latency models like GPT-4o-mini
+
+## Hallucinations: Risks and Mitigation
+
+LLMs can generate plausible-sounding but false information. Example:
+
+- Model may claim a social media post references a law that doesn’t exist.
+  
+Mitigation:
+
+- Human-in-the-loop review
+- Output filtering
+- Provide detailed and accurate context
+
+# 6.) Using a VM or GPU for LLM workflows in R
+<!-- @Arnim:  Kannst du insbesondere hier nachfolgend kommentieren: weitere/andere Ideen, wie man das hier aufziehen kann? Wie kann man KISSKI & BLABLADOR, and OpenRouter Backends hier unterbringen? -->
+
+Many API-based workflows run fully in the cloud provider, so you do not need a local GPU. However, VMs can help with:
+- Large-scale pre/post-processing (embeddings, chunking, retrieval).
+- Hosting vector databases and caches.
+- Running open-source models locally (when needed).
+
+### Option A: Cloud VM (no GPU) for API orchestration
+- Provision a small VM (e.g., 2–4 vCPUs, 8–16 GB RAM).
+- Install R, RStudio Server, and system libs.
+- Store secrets via environment variables or a secret manager.
+
+Example bootstrap (Ubuntu):
+```{r eval=FALSE}
+```bash
+sudo apt-get update
+sudo apt-get install -y r-base gdebi-core
+# optional: RStudio Server
+wget https://download2.rstudio.org/server/jammy/amd64/rstudio-server-2024.04.2-764-amd64.deb
+sudo gdebi -n rstudio-server-2024.04.2-764-amd64.deb
+```
+```
+
+In R, manage keys safely:
+```{r eval=FALSE}
+Sys.setenv(OPENAI_API_KEY = "...", ANTHROPIC_API_KEY = "...")
+api_key <- Sys.getenv("OPENAI_API_KEY")
+```
+
+### Option B: GPU VM for local/open models
+If you need to run open models (e.g., via ollama/text-generation-webui or transformers):
+- Choose a GPU VM (e.g., 1x T4/A10/A100 depending on model size).
+- Ensure drivers + CUDA/cuDNN are installed or use a prebuilt image.
+- Prefer containerized stacks to avoid driver mismatches.
+
+Docker example with ollama server:
+```{r eval=FALSE}
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull llama3
+ollama run llama3 "Hello"
+```
+```
+Then call from R via httr to http://localhost:11434.
+
+### Practical tips
+- Log prompts, responses, and model versions for reproducibility.
+- Use caching for repeated prompts.
+- Monitor costs and storage; rotate logs with sensitive data.
+
+
+
