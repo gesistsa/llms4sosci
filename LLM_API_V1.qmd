@@ -48,6 +48,9 @@ Accessing LLM APIs requires creating an account with a provider and generating a
 - **OpenAI**: Create an account at openai.com, navigate to API keys, and generate a new key.
 - **Anthropic**: Sign up at anthropic.com, go to “API Keys,” and generate a secret key.
 - **Cohere**: Register at cohere.ai, go to API dashboard, and copy your key.
+- **SAIA / Chat AI**: To get access to an API key, go to the KISSKI LLM Service page (https://kisski.gwdg.de/en/leistungen/2-02-llm-service/) and click on “Book”. A more detailed documentation and overview on availible models can be found at https://docs.hpc.gwdg.de/services/saia/index.html.The service is free for academic use in Germany.
+- **Blablador**: Registration and discussion at https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/. The service is free for academic use in Germany.
+- **OpenRouter**: Create an account at https://openrouter.ai. The service allows access to all major models.
 
 Generating the key and using it accordingly might not function before switching to a paid-plan or adding funds to your account, depending on the provider. You should see the pricing overview of the specific provider before continuing.
 
@@ -451,6 +454,7 @@ Then call from R via httr to http://localhost:11434.
 - Log prompts, responses, and model versions for reproducibility.
 - Use caching for repeated prompts.
 - Monitor costs and storage; rotate logs with sensitive data.
+
 
 
 
