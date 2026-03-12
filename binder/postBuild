@@ -1,9 +1,12 @@
 #!/bin/bash
 set -e
 
-# Helpful diagnostics (shows versions in the build logs)
+# ensure conda activation variables for Quarto are set
+ENV_QUARTO="$CONDA_PREFIX/etc/conda/activate.d/quarto.sh"
+if [ -z "${QUARTO_DENO}" ] && [ -f "${ENV_QUARTO}" ]; then
+    source "${ENV_QUARTO}"
+fi
+
 quarto --version
 R --version
-
-# Render your Quarto document
 quarto render LLM_API_V1.qmd
