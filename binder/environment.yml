@@ -7,7 +7,7 @@ dependencies:
 
   # Quarto CLI to render .qmd
   - quarto
-
+  - deno
   # R + core rendering tooling
   - r-base=4.3
   - r-knitr
