@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+# Helpful diagnostics (shows versions in the build logs)
+quarto --version
+R --version
+
+# Render your Quarto document
+quarto render LLM_API_V1.qmd
