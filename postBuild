@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+CONDA_ENV_PATH="/srv/conda/envs/notebook"
+ENV_QUARTO="${CONDA_ENV_PATH}/etc/conda/activate.d/quarto.sh"
+
+if [ -f "${ENV_QUARTO}" ]; then
+    . "${ENV_QUARTO}"
+fi
+
+quarto --version
+R --version
+quarto render LLM_API_V1.qmd

@@ -1,0 +1,29 @@
+name: quarto-r-binder
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - jupyterlab
+
+  # Quarto via conda
+  - quarto
+  - deno
+
+  # R core
+  - r-base=4.3
+  - r-knitr
+  - r-rmarkdown
+
+  # Packages actually used in the qmd
+  - r-httr
+  - r-jsonlite
+  - r-readr
+  - r-dplyr
+  - r-purrr
+  - r-tidyr
+
+  # Packages previously installed via install.R for interactive use
+  - r-ggplot2
+  - r-lubridate
+  - r-tidytext
+  - r-stopwords
