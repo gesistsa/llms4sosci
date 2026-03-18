@@ -5,12 +5,16 @@ dependencies:
   - python=3.11
   - jupyterlab
 
-  # Core R
+  # Quarto via conda
+  - quarto
+  - deno
+
+  # R core
   - r-base=4.3
   - r-knitr
   - r-rmarkdown
 
-  # Packages used in the tutorial / examples
+  # Packages actually used in the qmd
   - r-httr
   - r-jsonlite
   - r-readr
@@ -18,7 +22,7 @@ dependencies:
   - r-purrr
   - r-tidyr
 
-  # Packages currently installed in install.R for interactive use
+  # Packages previously installed via install.R for interactive use
   - r-ggplot2
   - r-lubridate
   - r-tidytext

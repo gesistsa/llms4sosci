@@ -1,19 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-QUARTO_VERSION=1.8.27
-QUARTO_TGZ="quarto-${QUARTO_VERSION}-linux-amd64.tar.gz"
-QUARTO_URL="https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/${QUARTO_TGZ}"
+ENV_QUARTO="${CONDA_PREFIX}/etc/conda/activate.d/quarto.sh"
 
-mkdir -p "${HOME}/opt"
-mkdir -p "${HOME}/.local/bin"
+if [ -f "${ENV_QUARTO}" ]; then
+    # load Quarto-related env vars from the conda environment
+    # shellcheck disable=SC1090
+    source "${ENV_QUARTO}"
+fi
 
-curl -fsSL "${QUARTO_URL}" -o "/tmp/${QUARTO_TGZ}"
-tar -C "${HOME}/opt" -xzf "/tmp/${QUARTO_TGZ}"
-ln -sfn "${HOME}/opt/quarto-${QUARTO_VERSION}/bin/quarto" "${HOME}/.local/bin/quarto"
-rm -f "/tmp/${QUARTO_TGZ}"
-
-export PATH="${HOME}/.local/bin:${PATH}"
-
+quarto check
 quarto --version
+R --version
 quarto render LLM_API_V1.qmd
