@@ -5,14 +5,21 @@ dependencies:
   - python=3.11
   - jupyterlab
 
-  # Quarto CLI to render .qmd
-  - quarto
-  - deno
-  # R + core rendering tooling
+  # Core R
   - r-base=4.3
   - r-knitr
   - r-rmarkdown
 
-  # Packages used in your .qmd
+  # Packages used in the tutorial / examples
   - r-httr
   - r-jsonlite
+  - r-readr
+  - r-dplyr
+  - r-purrr
+  - r-tidyr
+
+  # Packages currently installed in install.R for interactive use
+  - r-ggplot2
+  - r-lubridate
+  - r-tidytext
+  - r-stopwords
