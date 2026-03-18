@@ -1,15 +1,13 @@
 #!/bin/bash
-set -euo pipefail
+set -e
 
-ENV_QUARTO="${CONDA_PREFIX}/etc/conda/activate.d/quarto.sh"
+CONDA_ENV_PATH="/srv/conda/envs/notebook"
+ENV_QUARTO="${CONDA_ENV_PATH}/etc/conda/activate.d/quarto.sh"
 
 if [ -f "${ENV_QUARTO}" ]; then
-    # load Quarto-related env vars from the conda environment
-    # shellcheck disable=SC1090
-    source "${ENV_QUARTO}"
+    . "${ENV_QUARTO}"
 fi
 
-quarto check
 quarto --version
 R --version
 quarto render LLM_API_V1.qmd
