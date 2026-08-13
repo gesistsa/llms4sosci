@@ -1,6 +1,6 @@
 ---
 title: "Using Large Language Models (LLMs) in Social Science Research via API-Access"
-author: "Arthur Mühl"
+author: "Arthur Mühl", "Christina Viehmann", "Arnim Bleier"
 date: "`r Sys.Date()`"
 format:
   html:
@@ -8,6 +8,50 @@ format:
   gfm: default
   ipynb: default
 ---
+
+## Learning Objectives
+
+By the end of this tutorial, you will be able to
+
+1. AAAA
+2. BBBB
+
+## Target audience
+
+e.g. This tutorial is aimed at beginners with some knowledge in R. Optionally, prerequisites, e.g. Prior knowledge of R programming is required for this tutorial.
+
+## Setting up the computational environment
+
+Install the R packages.
+
+```{r}
+#| label: install-packages
+#| eval: false
+install.packages("quanteda")
+install.packages("lsa")
+install.packages("rsparse")
+install.packages("sweater")
+```
+
+And load the R packages.
+
+```{r}
+#| message: false
+require(quanteda)
+require(lsa)
+require(rsparse)
+require(sweater)
+```
+
+## Duration
+
+Around n minutes
+
+## Social Science Usecase(s)
+
+This method has been used in previous studies to evaluate ... [e.g. @mueller:2023:DRN].
+
+<!-- From this point on, you can use whatever headings. -->
 
 # 1. Introduction: Why LLMs Matter in Social Science
 
