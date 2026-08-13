@@ -552,4 +552,8 @@ Mitigation:
 - Output filtering
 - Provide detailed and accurate context
 
+## Conclusion
 
+Now you know how to do AAAA and BBBB.
+
+## References
