@@ -13,12 +13,15 @@ format:
 
 By the end of this tutorial, you will be able to
 
-1. AAAA
-2. BBBB
+1. Set up and authenticate with an LLM API provider (e.g. OpenAI) in R
+2. Send basic API requests and adjust key parameters (model, token limit, temperature)
+3. Apply prompting strategies (zero-shot, few-shot, chain-of-thought) to social science tasks
+4. Test basic functionalities with an example dataframe or with your own data
+5. Recognize practical challenges (cost, latency, hallucinations) and how to mitigate them
 
 ## Target audience
 
-e.g. This tutorial is aimed at beginners with some knowledge in R. Optionally, prerequisites, e.g. Prior knowledge of R programming is required for this tutorial.
+This tutorial is aimed at social scientists with basic R knowledge who want to use LLM APIs for their research.
 
 ## Setting up the computational environment
 
@@ -27,33 +30,31 @@ Install the R packages.
 ```{r}
 #| label: install-packages
 #| eval: false
-install.packages("quanteda")
-install.packages("lsa")
-install.packages("rsparse")
-install.packages("sweater")
+install.packages("httr")
+install.packages("jsonlite")
+install.packages("readr")
+install.packages("dplyr")
+install.packages("purrr")
+install.packages("tidyr")
 ```
 
 And load the R packages.
 
 ```{r}
 #| message: false
-require(quanteda)
-require(lsa)
-require(rsparse)
-require(sweater)
+require(httr)
+require(jsonlite)
+require(readr)
+require(dplyr)
+require(purrr)
+require(tidyr)
 ```
 
 ## Duration
 
-Around n minutes
+Around 60 minutes
 
 ## Social Science Usecase(s)
-
-This method has been used in previous studies to evaluate ... [e.g. @mueller:2023:DRN].
-
-<!-- From this point on, you can use whatever headings. -->
-
-# 1. Introduction: Why LLMs Matter in Social Science
 
 Large Language Models (LLMs) represent a paradigm shift in computational social science. Beyond classical text analysis, they can be used to support survey research (e.g. generating synthetic respondents, pretesting items, coding open-ended answers), extract and structure information from documents and media (e.g. news, parliamentary debates, social media), and assist in data cleaning, harmonization, and recoding. Accessing LLMs via APIs lets us embed these capabilities directly into reproducible workflows in R, instead of relying on manual web interfaces.
 
@@ -66,8 +67,7 @@ LLMs can classify or summarize free-text answers from surveys (e.g. “Other: pl
 **Use Case: Entity Normalization in Administrative / Register Data**  
 When working with organization names, occupations, or locations, LLMs can help normalize messy strings (e.g. different spellings of the same organization) into standardized labels. This is especially useful when merging multiple data sources or building panel structures across time.
 
-
-## Overview of available LLM models
+# 1. Overview of available LLM models
 
 The table below gives a of popular LLM families used in the social sciences and some key properties (open weights/data, typical usage types, and context length).
 
