@@ -554,6 +554,11 @@ Mitigation:
 
 ## Conclusion
 
-Now you know how to do AAAA and BBBB.
+In this tutorial, you learned how to access LLMs via API in R, from setting up authentication and making your first request, to applying different prompting strategies, classifying text data at scale, and structuring model outputs into analysis-ready dataframes. You also saw the main practical challenges (cost, latency, hallucinations) that come with using LLMs in research and how to mitigate them. With this foundation, you can adapt the workflow to your own data and research questions.
 
 ## References
+
+- Holtdirk, T. GESIS Guide: Overview of Large Language Models. https://www.gesis.org/fileadmin/admin/Dateikatalog/pdf/guides/16_Holtdirk_Overview_of_LLMs_V1.1.pdf
+- OpenAI. Best Practices for API Key Safety. https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+- Gesis Prompting Guide: PLACEHOLDER.URL
+- Prompt Engineering Guide: Function Calling. https://www.promptingguide.ai/applications/function_calling
