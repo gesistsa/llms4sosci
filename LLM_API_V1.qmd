@@ -558,7 +558,7 @@ In this tutorial, you learned how to access LLMs via API in R, from setting up a
 
 ## References
 
-- Holtdirk, T. GESIS Guide: Overview of Large Language Models. https://www.gesis.org/fileadmin/admin/Dateikatalog/pdf/guides/16_Holtdirk_Overview_of_LLMs_V1.1.pdf
-- OpenAI. Best Practices for API Key Safety. https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+- Holtdirk, T., Saju, L., Fröhling, L., & Wagner, C. (2025). Overview of large language models for social and behavioral scientists (GESIS Guides to Digital Behavioral Data No. 16). GESIS Leibniz Institute for the Social Sciences. https://doi.org/10.60762/ggdbd25016.1.0
+- OpenAI. (n.d.). Best practices for API key safety. OpenAI Help Center. Retrieved August 20, 2026, from https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+- Saravia, E. (2022). Function calling. Prompt Engineering Guide. DAIR.AI. https://www.promptingguide.ai/applications/function_calling
 - Gesis Prompting Guide: PLACEHOLDER.URL
-- Prompt Engineering Guide: Function Calling. https://www.promptingguide.ai/applications/function_calling
