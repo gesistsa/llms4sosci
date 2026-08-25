@@ -207,7 +207,6 @@ hello
 # 3. Prompting Strategies: From Basics to Advanced
 
 Prompting transforms an LLM into a task-specific analytical tool. There are several different prompting strategies, that each have their own strengths and weaknesses. 
-<!-- @Arthur:  Insert link to Prompting Guide here -->
 
 ## Zero-Shot Prompting
 
@@ -251,7 +250,7 @@ Chain-of-thought (CoT) prompting guides the model to reason explicitly in steps 
 - Instruct the model to output a final concise answer after the steps.
 - When needed, request a machine-readable final summary (e.g., JSON) after the reasoning.
 
-For more in-depth information about prompting strategies, see the [gesis prompting guide](https://quarto.org)
+For more in-depth information about prompting strategies, see the [gesis prompting guide](https://www.gesis.org/fileadmin/admin/Dateikatalog/pdf/guides/25_Maurer_What_is_prompting.pdf)
 
 ## Example for Zero-Shot-Prompting
 
@@ -314,8 +313,6 @@ In practice, you will often vary this persona description for different projects
 
 - **Accuracy vs. Cost**: More complex prompting or longer examples may increase token usage.
 - **Stability**: Zero-shot can be unstable; few-shot usually produces more consistent results.
-
-<!-- @Arthur:  Generell wäre es noch schön, hier ein Beispiel zu haben, wo nicht nur ein Paragraph eingelesen wird, sondern eine Beispieldatei mit mehrere Paragraphen eingelesen und klassifiziert wird. Du kannst ja einen kleinen Play-Datensatz mit 100 Beispielsätzen als csv. anlegen und den dann hier einlesen. Den Playdatensatz legst du auch in dem Repo ab. Das kann dann schön im nächsten Paragraph fortgeführt werden: wie bekomme ich aus den Outputs im json-Format zu einem schonen Dataframe? -->
 
 # Hands on example: Classifying multiple texts from a file
 
@@ -559,6 +556,6 @@ In this tutorial, you learned how to access LLMs via API in R, from setting up a
 ## References
 
 - Holtdirk, T., Saju, L., Fröhling, L., & Wagner, C. (2025). Overview of large language models for social and behavioral scientists (GESIS Guides to Digital Behavioral Data No. 16). GESIS Leibniz Institute for the Social Sciences. https://doi.org/10.60762/ggdbd25016.1.0
+- Maurer, M. (2025). What is prompting? (GESIS Guides to Digital Behavioral Data No. 25). GESIS Leibniz Institute for the Social Sciences. https://doi.org/10.60762/ggdbd25025.1.0
 - OpenAI. (n.d.). Best practices for API key safety. OpenAI Help Center. Retrieved August 20, 2026, from https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
 - Saravia, E. (2022). Function calling. Prompt Engineering Guide. DAIR.AI. https://www.promptingguide.ai/applications/function_calling
-- Gesis Prompting Guide: PLACEHOLDER.URL
