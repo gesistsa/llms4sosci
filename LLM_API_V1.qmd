@@ -73,7 +73,7 @@ require(tidyr)
 
 ## Duration
 
-Around 60 minutes
+Around 180 minutes
 
 ## Social Science Usecase(s)
 
@@ -133,25 +133,6 @@ You only need to do this once per computer. Run the code below in the R console 
 system('setx OPENAI_API_KEY "your_openai_key_here"')
 ```
 
-**macOS / Linux**
-
-```{r, eval=FALSE}
-system('echo \'export OPENAI_API_KEY="your_openai_key_here"\' >> ~/.zshrc')
-```
-
-On macOS, this appends the key to your shell configuration file (`~/.zshrc` on newer Macs, `~/.bash_profile` on older ones). The key is then available every time you open a new session.
-
-One caveat on macOS: R and RStudio do not read `~/.zshrc` when you start them from the Dock or from Finder, so the key may still not be found. A more reliable option, which works the same way on Windows, macOS and Linux, is to store the key in R's own startup file `.Renviron`:
-
-```{r, eval=FALSE}
-write('OPENAI_API_KEY=your_openai_key_here', file = "~/.Renviron", append = TRUE)
-```
-
-R reads this file every time it starts, so the key is available in any R session on that computer. If you work with Git, make sure `.Renviron` is listed in your `.gitignore` so the key never ends up in a repository.
-
-Remember to restart R (on Windows, sometimes the whole computer) after setting your key, so that R can find it.
-<!-- @Arnim: Was ist gute Praxis, um solche Keys zu hinterlegen? Ich hätte es in Renvironment und mit gitignore gearbeitet, aber das macht den Transfer zu Python schwierig oder? Aber wie ist das mit VMs bzw. interaktiven Environments?-->
-
 Retrieving the key in R after restarting:
 ```{r}
 api_key <- Sys.getenv("OPENAI_API_KEY")
@@ -161,6 +142,17 @@ has_api_key <- exists("api_key", inherits = TRUE) &&
   !is.na(api_key) &&
   nzchar(api_key)
 ```
+
+**Other operating systems**
+
+A more reliable option, which works the same way on Windows, macOS and Linux, is to store the key in R's own startup file `.Renviron`:
+
+```{r, eval=FALSE}
+write('OPENAI_API_KEY=your_openai_key_here', file = "~/.Renviron", append = TRUE)
+```
+R reads this file every time it starts, so the key is available in any R session on that computer. If you work with Git, make sure `.Renviron` is listed in your `.gitignore` so the key never ends up in a repository.
+
+<!-- @Arnim: Was ist gute Praxis, um solche Keys zu hinterlegen? Ich hätte es in Renvironment und mit gitignore gearbeitet, aber das macht den Transfer zu Python schwierig oder? Aber wie ist das mit VMs bzw. interaktiven Environments?-->
 
 ## Setting Up the Coding Environment
 
