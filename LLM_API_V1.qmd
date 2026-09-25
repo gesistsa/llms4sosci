@@ -75,22 +75,22 @@ require(tidyr)
 
 Around 60 minutes
 
-## Social Science Usecase(s)
+## Social Science Use case(s)
 
-Large Language Models (LLMs) represent a paradigm shift in computational social science. Beyond classical text analysis, they can be used to support survey research (e.g. generating synthetic respondents, pretesting items, coding open-ended answers), extract and structure information from documents and media (e.g. news, parliamentary debates, social media), and assist in data cleaning, harmonization, and recoding. Accessing LLMs via APIs lets us embed these capabilities directly into reproducible workflows in R, instead of relying on manual web interfaces.
+Large Language Models (LLMs) represent a paradigm shift in computational social science. Beyond classical text analysis, they can be used to support survey research (e.g., generating synthetic respondents, pretesting items, coding open-ended answers), extract and structure information from documents and media (e.g., news, parliamentary debates, social media), and assist in data cleaning, harmonization, and recoding. Accessing LLMs via APIs lets us embed these capabilities directly into reproducible workflows in R, instead of relying on manual web interfaces.
 
 **Use Case: Stance Detection**  
 To illustrate, consider stance detection: identifying whether a social media post supports, opposes, or is neutral toward a policy. LLMs can perform this with minimal examples, which is particularly useful for rapidly evolving datasets.
 
 **Use Case: Coding Open-Ended Survey Responses**  
-LLMs can classify or summarize free-text answers from surveys (e.g. “Other: please specify”) into categories such as policy topics, emotions, or problem priorities. This reduces manual coding effort while still allowing you to keep original text for quality checks.
+LLMs can classify or summarize free-text answers from surveys (e.g., “Other: please specify”) into categories such as policy topics, emotions, or problem priorities. This reduces manual coding effort while still allowing you to keep original text for quality checks.
 
 **Use Case: Entity Normalization in Administrative / Register Data**  
-When working with organization names, occupations, or locations, LLMs can help normalize messy strings (e.g. different spellings of the same organization) into standardized labels. This is especially useful when merging multiple data sources or building panel structures across time.
+When working with organization names, occupations, or locations, LLMs can help normalize messy strings (e.g., different spellings of the same organization) into standardized labels. This is especially useful when merging multiple data sources or building panel structures across time.
 
 # 1. Overview of available LLM models
 
-The table below gives a of popular LLM families used in the social sciences and some key properties (open weights/data, typical usage types, and context length).
+The table below gives an overview of popular LLM families used in the social sciences and some key properties (open weights/data, typical usage types, and context length).
 
 | Model            | Creator     | Open parameters | Open data | Available types        | Parameter count     | Context length |
 |------------------|-------------|-----------------|-----------|------------------------|---------------------|----------------|
@@ -110,20 +110,20 @@ Source: [https://www.gesis.org/fileadmin/admin/Dateikatalog/pdf/guides/16_Holtdi
 
 ## Obtain and Secure API Keys
 
-Accessing LLM APIs requires creating an account with a provider and generating a secret API key.
+To access LLM APIs, create an account with a provider and generate a secret API key.
 
 - **OpenAI**: Create an account at openai.com, navigate to API keys, and generate a new key.
 - **Anthropic**: Sign up at anthropic.com, go to “API Keys,” and generate a secret key.
-- **Cohere**: Register at cohere.ai, go to API dashboard, and copy your key.
-- **SAIA / Chat AI**: To get access to an API key, go to the KISSKI LLM Service page (https://kisski.gwdg.de/en/leistungen/2-02-llm-service/) and click on “Book”. A more detailed documentation and overview on availible models can be found at https://docs.hpc.gwdg.de/services/saia/index.html.The service is free for academic use in Germany.
+- **Cohere**: Register at cohere.ai, go to the API dashboard, and copy your key.
+- **SAIA / Chat AI**: To get access to an API key, go to the KISSKI LLM Service page (https://kisski.gwdg.de/en/leistungen/2-02-llm-service/) and click on “Book”. More detailed documentation and an overview of available models can be found at https://docs.hpc.gwdg.de/services/saia/index.html.The service is free for academic use in Germany.
 - **Blablador**: Registration and discussion at https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/. The service is free for academic use in Germany.
 - **OpenRouter**: Create an account at https://openrouter.ai. The service allows access to all major models.
 
-Generating the key and using it accordingly might not function before switching to a paid-plan or adding funds to your account, depending on the provider. You should see the pricing overview of the specific provider before continuing. While the following can be done with most LLMs, we will stick to OpenAI´s GPT for this tutorial.
+Depending on the provider, generating the key and using it may not work until you switch to a paid plan or add funds to your account. Review the provider's pricing overview before continuing. While you can do the following with most LLMs, we will stick to OpenAI´s GPT for this tutorial.
 
 ### Best Practices for Credential Management
 
-Never hard-code your API key in scripts like we do here. Instead, store it as an environment variable. This process differs depending on your operating system. Most providers provide information for best-practices. [Here](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety) can you find how to do it for the OpenAI API key.
+Never hard-code your API key in scripts as we do here. Instead, store it as an environment variable. This process differs depending on your operating system. Most providers provide best-practice guidance. [Here](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety) can you find how to do it for the OpenAI API key.
 
 ```{r, eval=FALSE}
 # Windows
@@ -131,6 +131,7 @@ system('setx OPENAI_API_KEY "your_openai_key_here"')
 ```
 
 Remember to restart R after setting your key in order for R to be able to find the key.
+<!-- @Arnim: Was ist gute Praxis, um solche Keys zu hinterlegen? Ich hätte es in Renvironment und mit gitignore gearbeitet, aber das macht den Transfer zu Python schwierig, oder? Aber wie ist das mit VMs bzw. interaktiven Environments?-->
 
 Retrieving the key in R after restarting:
 ```{r}
@@ -146,7 +147,7 @@ has_api_key <- exists("api_key", inherits = TRUE) &&
 
 In this section, we prepare the R environment for making authenticated requests to the OpenAI API. We first load the required packages for handling HTTP requests (`httr`) and JSON data (`jsonlite`). We then define the base URL for the OpenAI **Responses API**, which is used to send prompts and receive model outputs.
 
-Authentication is handled via the API key stored in the object `api_key`. This key is passed to the API through the HTTP `Authorization` header using a Bearer token, alongside the required `Content-Type` specification. Once these components are defined, they can be reused across all subsequent API calls, ensuring a consistent and reproducible setup for interacting with OpenAI models.
+Authentication uses the API key stored in the `api_key` object. This key is passed to the API in the HTTP `Authorization` header as a Bearer token, along with the required `Content-Type` header. Once defined, you can reuse these components across all subsequent API calls, ensuring a consistent and reproducible setup for interacting with OpenAI models.
 
 ```{r, eval=has_api_key}
 library(httr)
@@ -171,11 +172,11 @@ In this first test call, we use the **minimal required settings** to talk to an 
 
 - **`Token limit`**: Defines how many **tokens** the model may use at most for its response.  
   - OpenAI (Responses API): `max_output_tokens`  
-  Small values (e.g. `50`) keep answers short and help to control costs. Larger values allow longer, more detailed responses but consume more quota. In this minimal example, a small value is sufficient because we only expect a very short reply.
+  Small values (e.g., `50`) keep answers short and help to control costs. Larger values allow longer, more detailed responses but consume more quota. In this minimal example, a small value is sufficient because we only expect a very short reply.
 
 - **`temperature`** (OpenAI Responses API): Controls how **creative or random** the model’s output is.  
   - `temperature = 0` → very deterministic, almost the same answer every time for the same input.  
-  - Higher values (e.g. `0.7` or `1.0`) → more diverse, creative responses.  
+  - Higher values (e.g., `0.7` or `1.0`) → more diverse, creative responses.  
   For a stable test call, we use a relatively low value (`0.2`) to get reproducible, rather neutral outputs.
 
 We also define a very simple message (**prompt**) in both examples, e.g.:
@@ -195,7 +196,7 @@ If you run the code and do not see any error, you should see a **short, model-ge
 ### OpenAI (Responses API)
 ```{r, eval=has_api_key}
 
-#Defining temperature and tokens limit
+#Defining temperature and token limit
 max_tokens  <- 50
 temperature <- 0.2
 
@@ -226,7 +227,7 @@ hello
 
 # 3. Prompting Strategies: From Basics to Advanced
 
-Prompting transforms an LLM into a task-specific analytical tool. There are several different prompting strategies, that each have their own strengths and weaknesses. 
+Prompting transforms an LLM into a task-specific analytical tool. There are several different prompting strategies that each have their own strengths and weaknesses. 
 
 ## Zero-Shot Prompting
 
@@ -323,9 +324,9 @@ messages = list(
 
 The system message tells the model how it should behave:
 
-- What role it should take (e.g. "You are a statistics tutor...", "You are a legal expert...").
-- Which style it should use (e.g. "Explain in simple language", "Answer in German").
-- Which constraints to follow (e.g. "Be concise and only output valid JSON.").
+- What role it should take (e.g., "You are a statistics tutor...", "You are a legal expert...").
+- Which style it should use (e.g., "Explain in simple language", "Answer in German").
+- Which constraints to follow (e.g., "Be concise and only output valid JSON.").
 
 In practice, you will often vary this persona description for different projects, while keeping the basic request structure (model, max_tokens, temperature) the same.
 
@@ -334,7 +335,7 @@ In practice, you will often vary this persona description for different projects
 - **Accuracy vs. Cost**: More complex prompting or longer examples may increase token usage.
 - **Stability**: Zero-shot can be unstable; few-shot usually produces more consistent results.
 
-# Hands on example: Classifying multiple texts from a file
+# Hands-on example: Classifying multiple texts from a file
 
 So far, we have only sent a single request at a time via the API. In practice, researchers usually work with *collections* of texts stored in files (e.g., CSVs).
 
@@ -365,7 +366,7 @@ glimpse(play_df_small)
 ```{r, echo=FALSE}
 if (!has_api_key) {
   message(
-    "No OPENAI_API_KEY found. API-dependent chunks are skipped during rendering and wont show (real) output.", " Set an OPENAI_API_KEY to run them interactively."
+    "No OPENAI_API_KEY found. API-dependent chunks are skipped during rendering and won't show (real) output.", " Set an OPENAI_API_KEY to run them interactively."
   )
 }
 ```
@@ -443,7 +444,7 @@ and convert them into clean, analysis-ready dataframes.
 
 # 4. Structuring Outputs for Research
 
-In the hands-on example above, model outputs were stored as plain strings.
+In the hands-on example above, we stored model outputs as plain strings.
 While this is sufficient for quick inspection, it becomes problematic for automated
 analysis pipelines: formats may vary, labels may drift, and parsing becomes fragile.
 A common solution is to explicitly request structured outputs from the model,
@@ -502,7 +503,7 @@ play_df_structured %>%
   head()
 ```
 
-The result is a clean dataframe where model outputs are stored in explicit columns.
+The result is a clean dataframe that stores model outputs in explicit columns.
 This representation is well suited for quantitative analysis, aggregation,
 visualization, and validation (e.g., checking allowed labels or missing values).
 This ensures outputs integrate seamlessly into analysis workflows, allowing automated aggregation,
@@ -571,7 +572,7 @@ Mitigation:
 
 ## Conclusion
 
-In this tutorial, you learned how to access LLMs via API in R, from setting up authentication and making your first request, to applying different prompting strategies, classifying text data at scale, and structuring model outputs into analysis-ready dataframes. You also saw the main practical challenges (cost, latency, hallucinations) that come with using LLMs in research and how to mitigate them. With this foundation, you can adapt the workflow to your own data and research questions.
+In this tutorial, you learned how to access LLMs via API in R, from setting up authentication and making your first request, to applying different prompting strategies, classifying text data at scale, and structuring model outputs into analysis-ready data frames. You also saw the main practical challenges (cost, latency, hallucinations) of using LLMs in research and how to mitigate them. With this foundation, you can adapt the workflow to your own data and research questions.
 
 ## References
 
